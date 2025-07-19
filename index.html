@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>வேதாகம புத்தக வரிசை வினாடி வினா</title>
+    <style>
+        body {
+            font-family: 'Arial Unicode MS', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        .quiz-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .question {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+        .options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .option {
+            padding: 12px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .option:hover {
+            background-color: #d6eaf8;
+        }
+        .option.selected {
+            background-color: #3498db;
+            color: white;
+        }
+        .option.correct {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .option.incorrect {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            text-align: center;
+            font-weight: bold;
+        }
+        .correct-feedback {
+            background-color: #d5f5e3;
+            color: #28b463;
+            border: 1px solid #28b463;
+        }
+        .incorrect-feedback {
+            background-color: #fadbd8;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+        .next-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .next-btn:hover {
+            background-color: #2980b9;
+        }
+        .next-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .score {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .progress {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #7f8c8d;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .question {
+                font-size: 18px;
+            }
+            .option {
+                padding: 10px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="progress" id="progress">1/66</div>
+        <div class="question" id="question"></div>
+        <div class="options" id="options"></div>
+        <div id="feedback" class="feedback"></div>
+        <button class="next-btn" id="next-btn" disabled>அடுத்தது</button>
+        <div class="score" id="score">மதிப்பெண்: 0/0</div>
+    </div>
+
+    <script>
+        // Tamil Bible books in order
+        const tamilBibleBooks = [
+            // Old Testament (39 books)
+            "ஆதியாகமம்", "யாத்திராகமம்", "லேவியராகமம்", "எண்ணாகமம்", "உபாகமம்",
+            "யோசுவா", "நியாயாதிபதிகள்", "ரூத்", "1 சாமுவேல்", "2 சாமுவேல்",
+            "1 இராஜாக்கள்", "2 இராஜாக்கள்", "1 நாளாகமம்", "2 நாளாகமம்", "எஸ்றா",
+            "நெகேமியா", "எஸ்தர்", "யோபு", "சங்கீதம்", "நீதிமொழிகள்",
+            "பிரசங்கி", "உன்னதப்பாட்டு", "ஏசாயா", "எரேமியா", "புலம்பல்",
+            "எசேக்கியல்", "தானியேல்", "ஓசியா", "யோவேல்", "ஆமோஸ்",
+            "ஓபதியா", "யோனா", "மீகா", "நாகூம்", "ஆபகூக்",
+            "செப்பனியா", "ஆகாய்", "சகரியா", "மல்கியா",
+            
+            // New Testament (27 books)
+            "மத்தேயு", "மாற்கு", "லூக்கா", "யோவான்", "அப்போஸ்தலர்",
+            "ரோமர்", "1 கொரிந்தியர்", "2 கொரிந்தியர்", "கலாத்தியர்", "எபேசியர்",
+            "பிலிப்பியர்", "கொலோசையர்", "1 தெசலோனிக்கேயர்", "2 தெசலோனிக்கேயர்", "1 தீமோத்தேயு",
+            "2 தீமோத்தேயு", "தீத்து", "பிலேமோன்", "எபிரெயர்", "யாக்கோபு",
+            "1 பேதுரு", "2 பேதுரு", "1 யோவான்", "2 யோவான்", "3 யோவான்",
+            "யூதா", "வெளிப்படுத்தின விசேஷம்"
+        ];
+
+        // Quiz state
+        let currentBookIndex = 0;
+        let score = 0;
+        let totalQuestions = 0;
+        let selectedOption = null;
+        let answerSubmitted = false;
+
+        // DOM elements
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const feedbackElement = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const scoreElement = document.getElementById('score');
+        const progressElement = document.getElementById('progress');
+
+        // Initialize the quiz
+        function initQuiz() {
+            currentBookIndex = 0;
+            score = 0;
+            totalQuestions = 0;
+            updateScore();
+            updateProgress();
+            showNextQuestion();
+        }
+
+        // Show next question
+        function showNextQuestion() {
+            if (currentBookIndex >= tamilBibleBooks.length - 1) {
+                // End of quiz
+                questionElement.textContent = "வினாடி வினா முடிந்தது!";
+                optionsElement.innerHTML = '';
+                feedbackElement.style.display = 'none';
+                nextBtn.style.display = 'none';
+                progressElement.textContent = "66/66";
+                return;
+            }
+
+            const currentBook = tamilBibleBooks[currentBookIndex];
+            
+            questionElement.textContent = `"${currentBook}"க்கு அடுத்த வேதாகம புத்தகம் எது?`;
+            
+            // Generate options (correct answer + 3 random wrong answers)
+            const correctAnswer = tamilBibleBooks[currentBookIndex + 1];
+            const options = [correctAnswer];
+            
+            // Get wrong options (ensure they're not the correct answer)
+            while (options.length < 4) {
+                const randomIndex = Math.floor(Math.random() * tamilBibleBooks.length);
+                const randomBook = tamilBibleBooks[randomIndex];
+                if (!options.includes(randomBook) && randomBook !== correctAnswer) {
+                    options.push(randomBook);
+                }
+            }
+            
+            // Shuffle options
+            options.sort(() => Math.random() - 0.5);
+            
+            // Display options
+            optionsElement.innerHTML = '';
+            options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('option');
+                optionElement.textContent = option;
+                optionElement.addEventListener('click', () => selectOption(index));
+                optionsElement.appendChild(optionElement);
+            });
+            
+            // Reset state
+            selectedOption = null;
+            answerSubmitted = false;
+            feedbackElement.style.display = 'none';
+            nextBtn.disabled = true;
+            nextBtn.textContent = 'அடுத்தது';
+        }
+
+        // Select an option
+        function selectOption(index) {
+            if (answerSubmitted) return;
+            
+            const options = document.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            options[index].classList.add('selected');
+            selectedOption = index;
+            
+            // Enable next button
+            nextBtn.disabled = false;
+        }
+
+        // Submit answer
+        function submitAnswer() {
+            if (selectedOption === null || answerSubmitted) return;
+            
+            const options = document.querySelectorAll('.option');
+            const selectedBook = options[selectedOption].textContent;
+            const correctBook = tamilBibleBooks[currentBookIndex + 1];
+            
+            answerSubmitted = true;
+            totalQuestions++;
+            
+            // Check if correct
+            if (selectedBook === correctBook) {
+                score++;
+                feedbackElement.textContent = `சரி! "${correctBook}" தான் சரியான விடை!`;
+                feedbackElement.className = 'feedback correct-feedback';
+                options[selectedOption].classList.add('correct');
+            } else {
+                feedbackElement.textContent = `தவறு! சரியான விடை "${correctBook}"`;
+                feedbackElement.className = 'feedback incorrect-feedback';
+                options[selectedOption].classList.add('incorrect');
+                
+                // Highlight correct answer
+                options.forEach((opt, idx) => {
+                    if (opt.textContent === correctBook) {
+                        opt.classList.add('correct');
+                    }
+                });
+            }
+            
+            feedbackElement.style.display = 'block';
+            updateScore();
+            nextBtn.textContent = 'அடுத்த புத்தகம்';
+        }
+
+        // Update score
+        function updateScore() {
+            scoreElement.textContent = `மதிப்பெண்: ${score}/${totalQuestions}`;
+        }
+
+        // Update progress
+        function updateProgress() {
+            progressElement.textContent = `${currentBookIndex + 1}/${tamilBibleBooks.length}`;
+        }
+
+        // Event listeners
+        nextBtn.addEventListener('click', () => {
+            if (!answerSubmitted) {
+                submitAnswer();
+            } else {
+                currentBookIndex++;
+                updateProgress();
+                showNextQuestion();
+            }
+        });
+
+        // Start the quiz
+        initQuiz();
+    </script>
+</body>
+</html>
